@@ -1,4 +1,4 @@
-Gnn
+Graph Neural Network Model
 ========
 ..
     .. image:: https://travis-ci.org/networkx/networkx.svg?branch=master
@@ -10,7 +10,6 @@ Gnn
     .. image:: https://codecov.io/gh/networkx/networkx/branch/master/graph/badge.svg
       :target: https://codecov.io/gh/networkx/networkx
 
-# GNN Tensorflow Implementation
 
 This repo contains a Tensorflow implementation of the Graph Neural Network model.
 

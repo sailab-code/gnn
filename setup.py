@@ -1,11 +1,11 @@
 import setuptools
 
-with open("README.rst", "r") as fh:
+with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="gnn",
-    version="1.0.1",
+    version="1.0.2",
     author="Matteo Tiezzi",
     author_email="mtiezzi@diism.unisi.it",
     description="Graph Neural Network Tensorflow implementation",

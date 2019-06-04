@@ -27,7 +27,7 @@ Install
 
 Requirements
 ^^^^^^^^^^^^
-The GNN framework requires the packages **tensorflow, ** numpy, ** scipy
+The GNN framework requires the packages **tensorflow**, **numpy**, **scipy**.
 
 
 To install the requirements you can use the following command:

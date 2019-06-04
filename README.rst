@@ -27,17 +27,15 @@ Install
 
 Requirements
 ^^^^^^^^^^^^
-The GNN framework requires the following packages:
-- ** tensorflow
-- ** numpy
-- ** scipy
+The GNN framework requires the packages **tensorflow, ** numpy, ** scipy
+
 
 To install the requirements you can use the following command:
 ::
     pip install -U -r requirements.txt
 
 
-Install the latest version of NetworkX::
+Install the latest version of GNN::
 
     $ pip install gnn
 

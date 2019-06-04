@@ -23,6 +23,20 @@ This repo contains a Tensorflow implementation of the Graph Neural Network model
 Install
 -------
 
+
+
+Requirements
+^^^^^^^^^^^^
+The GNN framework requires the following packages:
+- ** tensorflow
+- ** numpy
+- ** scipy
+
+To install the requirements you can use the following command:
+::
+    pip install -U -r requirements.txt
+
+
 Install the latest version of NetworkX::
 
     $ pip install gnn

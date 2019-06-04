@@ -1,6 +1,6 @@
 import tensorflow as tf
-import Library
-import GNN
+import gnn.Library as Library
+import gnn.GNN as GNN
 import Net_Subgraph as n
 
 ##### GPU & stuff config

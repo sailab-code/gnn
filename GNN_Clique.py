@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
-import Library
-import GNN as GNN
+import gnn.Library as Library
+import gnn.GNN as GNN
 import Net_Clique as n
 import tensorflow as tf
 import pandas as pd

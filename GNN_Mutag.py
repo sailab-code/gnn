@@ -1,6 +1,6 @@
 import numpy as np
-import Library
-import GNN as GNN
+import gnn.Library as Library
+import gnn.GNN as GNN
 import Net_Mutag as n
 import tensorflow as tf
 import load as ld

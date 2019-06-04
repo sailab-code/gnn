@@ -26,18 +26,16 @@ Install
 Install the latest version of NetworkX::
 
     $ pip install gnn
-Install with all optional dependencies::
 
-    $ pip install gnn[all]
 
-For additional details, please see `INSTALL.rst`.
+For additional details, please see `Install <https://sailab.diism.unisi.it/gnn/install.html>`_.
 
 Simple usage example
 --------------------
 
 ::
 
-        import GNN
+        import gnn.GNN
         import Net as n
         
         # Provide your own functions to generate input data

@@ -87,9 +87,6 @@ inp, arcnode, graphnode = gnn_utils.from_EN_to_GNN(E, N_tot)
 labels = np.random.randint(2, size=(N_tot.shape[0]))
 
 
-
-print(graphnode)
-exit()
 labels = np.eye(max(labels)+1, dtype=np.int32)[labels]  # one-hot encoding of labels
 
 

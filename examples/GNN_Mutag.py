@@ -1,11 +1,17 @@
 import numpy as np
-import gnn.Library as Library
+import gnn.gnn_utils as gnn_utils
 import gnn.GNN as GNN
 import Net_Mutag as n
 import tensorflow as tf
 import load as ld
 from scipy.sparse import coo_matrix
 import os
+
+
+
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
 
 #############   DATA LOADING    ##################################################
 # function to get a fold
@@ -16,15 +22,15 @@ def getFold(fold):
 
     ############ training set #############
 
-    ret_train = Library.set_load_mutag("train", train)
+    ret_train = gnn_utils.set_load_mutag("train", train)
 
     ###########validation#####################
 
-    ret_val = Library.set_load_mutag("validation", train)
+    ret_val = gnn_utils.set_load_mutag("validation", train)
 
     ########### test #####################
 
-    ret_test = Library.set_load_mutag("test", train)
+    ret_test = gnn_utils.set_load_mutag("test", train)
 
     return ret_train, ret_val, ret_test
 
@@ -44,10 +50,11 @@ state_dim = 5
 max_it = 50
 num_epoch = 1000
 optimizer = tf.train.AdamOptimizer
-input_dim = 31
+
 output_dim = 2
 
 testacc = []
+
 for fold in range(0, 10):
 
     tf.reset_default_graph()
@@ -56,11 +63,11 @@ for fold in range(0, 10):
     param = param + "_fold" + str(fold)
     print(param)
 
-    # initialize network
-    net = n.Net(input_dim, state_dim, output_dim)
 
     # retrieve input, arcnode, nodegraph and target for training set
     inp = tr[fold][0]
+    input_dim = len(inp[0][0])
+
     arcnode = tr[fold][1]
     labels = tr[fold][4]
     nodegraph = tr[fold][2]
@@ -71,9 +78,13 @@ for fold in range(0, 10):
     labels_val = val[fold][4]
     nodegraph_val = val[fold][2]
 
+    # initialize network
+    net = n.Net(input_dim, state_dim, output_dim)
+
+
     # instantiate GNN
-    g = GNN.GNN(net,  input_dim, output_dim, state_dim, max_it, optimizer, learning_rate, threshold, True,
-                param)
+    g = GNN.GNN(net, input_dim, output_dim, state_dim,  max_it,  optimizer, learning_rate, threshold, graph_based=True,
+                param=param, config=config)
 
     # train GNN, and validate every 2 epochs, (early stopping)
     count = 0
@@ -90,7 +101,7 @@ for fold in range(0, 10):
 
             if loss < valid_best:
                 valid_best = loss
-                save_path = g.saver.save(g.session, g.save_path)
+                #save_path = g.saver.save(g.session, g.save_path)
                 patience = 0
             else:
                 patience += 1

@@ -1,15 +1,10 @@
 import tensorflow as tf
 import numpy as np
-import os
 import datetime as time
-from scipy.sparse import coo_matrix
 
 # class for the core of the architecture
 class GNN:
-    def __init__(self, net,  input_dim, output_dim, state_dim, max_it=50, optimizer=tf.train.AdamOptimizer,
-                 learning_rate=0.0001,
-                 threshold=0.01,
-                 graph_based=False,
+    def __init__(self, net,  input_dim, output_dim, state_dim, max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01, graph_based=False,
                  param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False):
         """
                create GNN instance. Feed this parameters:
@@ -27,6 +22,9 @@ class GNN:
                :config: ConfigProto protocol buffer object, to set configuration options for a session
                :tensorboard:  boolean flag to activate tensorboard
                """
+
+        np.random.seed(0)
+        tf.set_random_seed(0)
         self.tensorboard = tensorboard
         self.max_iter = max_it
         self.net = net
@@ -36,9 +34,11 @@ class GNN:
         self.output_dim = output_dim
         self.state_dim = state_dim
         self.graph_based = graph_based
+
         self.build()
 
         self.session = tf.Session(config=config)
+        #self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         self.init_l = tf.local_variables_initializer()
 
@@ -48,13 +48,14 @@ class GNN:
             self.merged_train = tf.summary.merge_all(key='train')
             self.merged_val = tf.summary.merge_all(key='val')
             self.writer = tf.summary.FileWriter('tmp/' + param, self.session.graph)
-        self.saver = tf.train.Saver()
-        self.save_path = os.path.join("./tmp", "model.ckpt")
+        # self.saver = tf.train.Saver()
+        # self.save_path = "tmp/" + param + "saves/model.ckpt"
 
     def VariableState(self):
         '''Define placeholders for input, output, state, state_old, arch-node conversion matrix'''
         # placeholder for input and output
-        self.a = tf.placeholder(tf.float32, shape=(None, self.input_dim), name="input")
+
+        self.comp_inp = tf.placeholder(tf.float32, shape=(None, self.input_dim), name="input")
         self.y = tf.placeholder(tf.float32, shape=(None, self.output_dim), name="target")
 
         # state(t) & state(t-1)
@@ -68,7 +69,7 @@ class GNN:
         self.NodeGraph = tf.placeholder(tf.float32, name="NodeGraph")
 
     def build(self):
-        """build the architecture, setting variable, loss, training"""
+        '''build the architecture, setting variable, loss, training'''
         # network
         self.VariableState()
         self.loss_op = self.Loop()
@@ -104,14 +105,6 @@ class GNN:
                 self.summ_val_met = tf.summary.scalar('val_metric', self.val_met, collections=['always'])
 
     def convergence(self, a, state, old_state, k):
-
-        """
-        :param a: asdfas
-        :param state:  adfasdf
-        :param old_state:  afdsfasd
-        :param k: fasdfasdf
-        :return: fadsfasd
-        """
         with tf.variable_scope('Convergence'):
             # body of the while cicle used to iteratively calculate state
 
@@ -122,6 +115,8 @@ class GNN:
             gat = tf.gather(old_state, tf.cast(a[:, 0], tf.int32))
 
             # slice to consider only label of the node and that of it's neighbor
+            # sl = tf.slice(a, [0, 1], [tf.shape(a)[0], tf.shape(a)[1] - 1])
+            # equivalent code
             sl = a[:, 1:]
 
             # concat with retrieved state
@@ -142,11 +137,12 @@ class GNN:
             outDistance = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(state, old_state)), 1) + 0.00000000001)
             # vector showing item converged or not (given a certain threshold)
             checkDistanceVec = tf.greater(outDistance, self.state_threshold)
-            # break loop when states of all nodes converged
+
             c1 = tf.reduce_any(checkDistanceVec)
             c2 = tf.less(k, self.max_iter)
 
         return tf.logical_and(c1, c2)
+
 
     def Loop(self):
         # call to loop for the state computation and compute the output
@@ -154,7 +150,7 @@ class GNN:
         with tf.variable_scope('Loop'):
             k = tf.constant(0)
             res, st, old_st, num = tf.while_loop(self.condition, self.convergence,
-                                                 [self.a, self.state, self.state_old, k])
+                                                 [self.comp_inp, self.state, self.state_old, k])
             if self.tensorboard:
                 self.summ_iter = tf.summary.scalar('iteration', num, collections=['always'])
 
@@ -167,19 +163,21 @@ class GNN:
         return out, num
 
     def Train(self, inputs, ArcNode, target, step, nodegraph=0.0):
-        ''' train methods: has to receive the inputs, arch-node matrix conversion, target,
+        ''' train methods: has to receive the inputs, arch-node matrix , target,
         and optionally nodegraph indicator '''
-        ArcNode = coo_matrix(ArcNode.T)
 
-        fd = {self.NodeGraph: nodegraph, self.a: inputs, self.state: np.zeros((ArcNode.shape[0], self.state_dim)),
-              self.state_old: np.ones((ArcNode.shape[0], self.state_dim)),
-              self.ArcNode: tf.SparseTensorValue(indices=np.array([ArcNode.row, ArcNode.col]).T, values=ArcNode.data,
-                                                 dense_shape=ArcNode.shape), self.y: target}
+        # Creating a SparseTEnsor with the feeded ArcNode Matrix
+        arcnode_ = tf.SparseTensorValue(indices=ArcNode.indices, values=ArcNode.values,
+                                        dense_shape=ArcNode.dense_shape)
+
+        fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
+              self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
+              self.ArcNode: arcnode_, self.y: target}
         if self.tensorboard:
             _, loss, loop, merge_all, merge_tr = self.session.run(
                 [self.train_op, self.loss, self.loss_op, self.merged_all, self.merged_train],
                 feed_dict=fd)
-            if step % 100 == 0:  # frequency of tensorboard summary
+            if step % 100 == 0:
                 self.writer.add_summary(merge_all, step)
                 self.writer.add_summary(merge_tr, step)
         else:
@@ -190,62 +188,79 @@ class GNN:
         return loss, loop[1]
 
     def Validate(self, inptVal, arcnodeVal, targetVal, step, nodegraph=0.0):
-        # validation step
-        arcnodeVal = coo_matrix(arcnodeVal.T)
-        fd_val = {self.NodeGraph: nodegraph, self.a: inptVal,
-                  self.state: np.zeros((arcnodeVal.shape[0], self.state_dim)),
-                  self.state_old: np.ones((arcnodeVal.shape[0], self.state_dim)),
-                  self.ArcNode: tf.SparseTensorValue(indices=np.array([arcnodeVal.row, arcnodeVal.col]).T,
-                                                     values=arcnodeVal.data, dense_shape=arcnodeVal.shape),
+        """ Takes care of the validation of the model - it outputs, regarding the set given as input,
+         the loss value, the accuracy (custom defined in the Net file), the number of iteration
+         in the convergence procedure """
+
+        arcnode_ = tf.SparseTensorValue(indices=arcnodeVal.indices, values=arcnodeVal.values,
+                                        dense_shape=arcnodeVal.dense_shape)
+
+        fd_val = {self.NodeGraph: nodegraph, self.comp_inp: inptVal,
+                  self.state: np.zeros((arcnodeVal.dense_shape[0], self.state_dim)),
+                  self.state_old: np.ones((arcnodeVal.dense_shape[0], self.state_dim)),
+                  self.ArcNode: arcnode_,
                   self.y: targetVal}
 
         if self.tensorboard:
-            loss_val, loop, merge_all, merge_val = self.session.run(
-                [self.val_loss, self.loss_op, self.merged_all, self.merged_val], feed_dict=fd_val)
+            loss_val, loop, merge_all, merge_val, metr = self.session.run(
+                [self.val_loss, self.loss_op, self.merged_all, self.merged_val, self.metrics], feed_dict=fd_val)
             self.writer.add_summary(merge_all, step)
             self.writer.add_summary(merge_val, step)
         else:
-            loss_val, loop = self.session.run(
-                [self.val_loss, self.loss_op], feed_dict=fd_val)
-        return loss_val
+            loss_val, loop, metr = self.session.run(
+                [self.val_loss, self.loss_op, self.metrics], feed_dict=fd_val)
+        return loss_val, metr, loop[1]
 
     def Evaluate(self, inputs, st, st_old, ArcNode, target):
-        ArcNode = coo_matrix(ArcNode.T)
-        '''evaluate methods: has to receive the inputs, initialization for state(t) and state(t-1), arch-node matrix conversion, target '''
-        fd = {self.a: inputs, self.state: st, self.state_old: st_old,
-              self.ArcNode: tf.SparseTensorValue(indices=np.array([ArcNode.row, ArcNode.col]).T, values=ArcNode.data,
-                                                 dense_shape=ArcNode.shape), self.y: target}
+        '''evaluate method with initialized state -- not used for the moment: has to receive the inputs,
+        initialization for state(t) and state(t-1),
+        arch-node matrix conversion, target -- gives as output the accuracy on the set given as input'''
+
+        arcnode_ = tf.SparseTensorValue(indices=ArcNode.indices, values=ArcNode.values,
+                                        dense_shape=ArcNode.dense_shape)
+
+        fd = {self.comp_inp: inputs, self.state: st, self.state_old: st_old,
+              self.ArcNode: arcnode_, self.y: target}
         _ = self.session.run([self.init_l])
-        met = self.session.run(self.metrics, feed_dict=fd)
+        met = self.session.run([self.metrics], feed_dict=fd)
         return met
 
     def Evaluate(self, inputs, ArcNode, target, nodegraph=0.0):
-        ArcNode = coo_matrix(ArcNode.T)
-        '''evaluate methods: has to receive the inputs,  arch-node matrix conversion, target '''
-        fd = {self.NodeGraph: nodegraph, self.a: inputs, self.state: np.zeros((ArcNode.shape[0], self.state_dim)),
-              self.state_old: np.ones((ArcNode.shape[0], self.state_dim)),
-              self.ArcNode: tf.SparseTensorValue(indices=np.array([ArcNode.row, ArcNode.col]).T, values=ArcNode.data,
-                                                 dense_shape=ArcNode.shape), self.y: target}
+        '''evaluate methods: has to receive the inputs,  arch-node matrix conversion, target
+         -- gives as output the accuracy on the set given as input'''
+
+        arcnode_ = tf.SparseTensorValue(indices=ArcNode.indices, values=ArcNode.values,
+                                        dense_shape=ArcNode.dense_shape)
+
+        fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
+              self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
+              self.ArcNode: arcnode_, self.y: target}
         _ = self.session.run([self.init_l])
-        met = self.session.run(self.metrics, feed_dict=fd)
+        met = self.session.run([self.metrics], feed_dict=fd)
         return met
 
     def Predict(self, inputs, st, st_old, ArcNode):
-        ArcNode = coo_matrix(ArcNode.T)
-        '''predict methods: has to receive the inputs, initialization for state(t) and state(t-1), arch-node matrix conversion '''
-        fd = {self.a: inputs, self.state: st, self.state_old: st_old,
-              self.ArcNode: tf.SparseTensorValue(indices=np.array([ArcNode.row, ArcNode.col]).T, values=ArcNode.data,
-                                                 dense_shape=ArcNode.shape)}
+        ''' predict methods with initialized state -- not used for the moment:: has to receive the inputs,
+         initialization for state(t) and state(t-1),
+         arch-node matrix conversion -- gives as output the output values of the output function (all the nodes output
+         for all the graphs (if node-based) or a single output for each graph (if graph based) '''
+
+        arcnode_ = tf.SparseTensorValue(indices=ArcNode.indices, values=ArcNode.values,
+                                        dense_shape=ArcNode.dense_shape)
+        fd = {self.comp_inp: inputs, self.state: st, self.state_old: st_old,
+              self.ArcNode: arcnode_}
         pr = self.session.run([self.loss_op], feed_dict=fd)
         return pr[0]
 
     def Predict(self, inputs, ArcNode, nodegraph=0.0):
-        ArcNode = coo_matrix(ArcNode.T)
+        ''' predict methods: has to receive the inputs, arch-node matrix conversion -- gives as output the output
+         values of the output function (all the nodes output
+         for all the graphs (if node-based) or a single output for each graph (if graph based) '''
 
-        '''predict methods: has to receive the inputs, arch-node matrix conversion '''
-        fd = {self.a: inputs, self.state: np.zeros((ArcNode.shape[0], self.state_dim)),
-              self.state_old: np.ones((ArcNode.shape[0], self.state_dim)),
-              self.ArcNode: tf.SparseTensorValue(indices=np.array([ArcNode.row, ArcNode.col]).T, values=ArcNode.data,
-                                                 dense_shape=ArcNode.shape)}
+        arcnode_ = tf.SparseTensorValue(indices=ArcNode.indices, values=ArcNode.values,
+                                        dense_shape=ArcNode.dense_shape)
+        fd = {self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
+              self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
+              self.ArcNode: arcnode_}
         pr = self.session.run([self.loss_op], feed_dict=fd)
         return pr[0]

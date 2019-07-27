@@ -1,23 +1,38 @@
 import tensorflow as tf
 import numpy as np
-import gnn.Library as Library
+
+import gnn.gnn_utils as gnn_utils
 import gnn.GNN as GNN
 import Net_Clique as n
 import tensorflow as tf
+import os
 import pandas as pd
 from scipy.sparse import coo_matrix
 from sklearn.preprocessing import StandardScaler
 
-data_path = "./Data/Clique"
-################ training set#################
 
-inp, arcnode, nodegraph, nodein , labels = Library.set_load_clique(data_path, "train")
-###########validation set#####################
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+data_path = "./data"
 
-inp_val, arcnode_val, nodegraph_val, nodein_val, labels_val = Library.set_load_clique(data_path, "validation")
-###########test set#####################
+############# training set ##########
 
-inp_test, arcnode_test, nodegraph_test, nodein_test, labels_test = Library.set_load_clique(data_path, "test")
+set_name = "cli_15_7_200"
+############# training set ################
+
+
+#inp, arcnode, nodegraph, nodein, labels = Library.set_load_subgraph(data_path, "train")
+inp, arcnode, nodegraph, nodein, labels, _ = gnn_utils.set_load_general(data_path, "train", set_name=set_name)
+############ test set ####################
+
+#inp_test, arcnode_test, nodegraph_test, nodein_test, labels_test = Library.set_load_subgraph(data_path, "test")
+inp_test, arcnode_test, nodegraph_test, nodein_test, labels_test, _ = gnn_utils.set_load_general(data_path, "test", set_name=set_name)
+
+############ validation set #############
+
+#inp_val, arcnode_val, nodegraph_val, nodein_val, labels_val = Library.set_load_subgraph(data_path, "valid")
+inp_val, arcnode_val, nodegraph_val, nodein_val, labels_val, _ = gnn_utils.set_load_general(data_path, "validation", set_name=set_name)
 
 # set threshold, learning rate and state dimension
 threshold = 0.001
@@ -33,13 +48,18 @@ max_it = 50
 num_epoch = 5000
 optimizer = tf.train.AdamOptimizer
 
+
+
+
+
 # initialize state and output network
 net = n.Net(input_dim, state_dim, output_dim)
 
 # initialize GNN
 param = "st_d" + str(state_dim) + "_th" + str(threshold) + "_lr" + str(learning_rate)
 print(param)
-g = GNN.GNN(net, max_it=max_it, input_dim=input_dim, output_dim=output_dim, state_dim=state_dim, optimizer=optimizer, learning_rate=learning_rate, threshold=threshold)
+g = GNN.GNN(net, max_it=max_it, input_dim=input_dim, output_dim=output_dim, state_dim=state_dim, optimizer=optimizer,
+            learning_rate=learning_rate, threshold=threshold, param=param, config=config)
 count = 0
 
 # train the model and validate every 30 epochs

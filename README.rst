@@ -47,7 +47,8 @@ Simple usage example
 
 ::
 
-        import gnn.GNN
+        import gnn.GNN as GNN
+        import gnn.gnn_utils
         import Net as n
         
         # Provide your own functions to generate input data

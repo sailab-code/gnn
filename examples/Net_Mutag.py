@@ -25,34 +25,55 @@ class Net:
         self.output_l2 = self.output_dim
 
         # list of weights
-        self.weights = {'State_L1': weight_variable([self.state_input, self.state_l1], "WEIGHT_STATE_L1"),
-                        'State_L2': weight_variable([ self.state_l1, self.state_l2], "WEIGHT_STATE_L1"),
+        # self.weights = {'State_L1': weight_variable([self.state_input, self.state_l1], "WEIGHT_STATE_L1"),
+        #                 'State_L2': weight_variable([ self.state_l1, self.state_l2], "WEIGHT_STATE_L1"),
+        #
+        #                 'Output_L1':weight_variable([self.state_l2,self.output_l1], "WEIGHT_OUTPUT_L1"),
+        #                 'Output_L2': weight_variable([self.output_l1, self.output_l2], "WEIGHT_OUTPUT_L2")
+        #                 }
+        #
+        # # list of biases
+        # self.biases = {'State_L1': weight_variable([self.state_l1],"BIAS_STATE_L1"),
+        #                'State_L2': weight_variable([self.state_l2], "BIAS_STATE_L2"),
+        #
+        #                'Output_L1':weight_variable([self.output_l1],"BIAS_OUTPUT_L1"),
+        #                'Output_L2': weight_variable([ self.output_l2], "BIAS_OUTPUT_L2")
+        #                }
 
-                        'Output_L1':weight_variable([self.state_l2,self.output_l1], "WEIGHT_OUTPUT_L1"),
-                        'Output_L2': weight_variable([self.output_l1, self.output_l2], "WEIGHT_OUTPUT_L2")
-                        }
-
-        # list of biases
-        self.biases = {'State_L1': weight_variable([self.state_l1],"BIAS_STATE_L1"),
-                       'State_L2': weight_variable([self.state_l2], "BIAS_STATE_L2"),
-
-                       'Output_L1':weight_variable([self.output_l1],"BIAS_OUTPUT_L1"),
-                       'Output_L2': weight_variable([ self.output_l2], "BIAS_OUTPUT_L2")
-                       }
+    # def netSt(self, inp):
+    #     with tf.variable_scope('State_net'):
+    #         # method to define the architecture of the state network
+    #         layer1 = tf.nn.tanh(tf.add(tf.matmul(inp,self.weights["State_L1"]),self.biases["State_L1"]))
+    #         layer2 = tf.nn.tanh(tf.add(tf.matmul(layer1, self.weights["State_L2"]), self.biases["State_L2"]))
+    #
+    #         return layer2
+    #
+    # def netOut(self, inp):
+    #     # method to define the architecture of the output network
+    #     with tf.variable_scope('Out_net'):
+    #         layer1 = tf.nn.tanh(tf.add(tf.matmul(inp, self.weights["Output_L1"]), self.biases["Output_L1"]))
+    #         layer2 = tf.nn.softmax(tf.add(tf.matmul(layer1, self.weights["Output_L2"]), self.biases["Output_L2"]))
+    #
+    #         return layer2
 
     def netSt(self, inp):
         with tf.variable_scope('State_net'):
-            # method to define the architecture of the state network
-            layer1 = tf.nn.tanh(tf.add(tf.matmul(inp,self.weights["State_L1"]),self.biases["State_L1"]))
-            layer2 = tf.nn.tanh(tf.add(tf.matmul(layer1, self.weights["State_L2"]), self.biases["State_L2"]))
+            # # method to define the architecture of the state network
+            # layer1 = tf.nn.tanh(tf.add(tf.matmul(inp, self.weights["State_L1"]), self.biases["State_L1"]))
+            # layer2 = tf.nn.tanh(tf.add(tf.matmul(layer1, self.weights["State_L2"]), self.biases["State_L2"]))
+
+            layer1 = tf.layers.dense(inp, self.state_l1, activation=tf.nn.tanh)
+            layer2 = tf.layers.dense(layer1, self.state_l2, activation=tf.nn.tanh)
 
             return layer2
 
     def netOut(self, inp):
         # method to define the architecture of the output network
-        with tf.variable_scope('Out_net'):
-            layer1 = tf.nn.tanh(tf.add(tf.matmul(inp, self.weights["Output_L1"]), self.biases["Output_L1"]))
-            layer2 = tf.nn.softmax(tf.add(tf.matmul(layer1, self.weights["Output_L2"]), self.biases["Output_L2"]))
+        # with tf.variable_scope('Out_net'):
+        #     layer1 = tf.nn.tanh(tf.add(tf.matmul(inp, self.weights["Output_L1"]), self.biases["Output_L1"]))
+        #     layer2 = tf.nn.softmax(tf.add(tf.matmul(layer1, self.weights["Output_L2"]), self.biases["Output_L2"]))
+            layer1 = tf.layers.dense(inp, self.output_l1, activation=tf.nn.tanh)
+            layer2 = tf.layers.dense(layer1, self.output_l2, activation=tf.nn.softmax)
 
             return layer2
 

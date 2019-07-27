@@ -1,43 +1,29 @@
 Graph Neural Network Model
-========
-..
-    .. image:: https://travis-ci.org/networkx/networkx.svg?branch=master
-       :target: https://travis-ci.org/networkx/networkx
-
-    .. image:: https://ci.appveyor.com/api/projects/status/github/networkx/networkx?branch=master&svg=true
-       :target: https://ci.appveyor.com/project/dschult/networkx-pqott
-
-    .. image:: https://codecov.io/gh/networkx/networkx/branch/master/graph/badge.svg
-      :target: https://codecov.io/gh/networkx/networkx
-
+==========================
 
 This repo contains a Tensorflow implementation of the Graph Neural Network model.
 
 
 - **Website (including documentation):** https://sailab.diism.unisi.it/gnn/index.html
-..
-    - **Mailing list:** https://groups.google.com/forum/#!forum/networkx-discuss
-    - **Source:** https://github.com/networkx/networkx
-    - **Bug reports:** https://github.com/networkx/networkx/issues
 
 Install
 -------
-
-
 
 Requirements
 ^^^^^^^^^^^^
 The GNN framework requires the packages **tensorflow**, **numpy**, **scipy**.
 
 
-To install the requirements you can use the following command:
+To install the requirements you can use the following command
 ::
-    pip install -U -r requirements.txt
+
+
+      pip install -U -r requirements.txt
 
 
 Install the latest version of GNN::
 
-    $ pip install gnn
+      pip install gnn
 
 
 For additional details, please see `Install <https://sailab.diism.unisi.it/gnn/install.html>`_.

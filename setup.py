@@ -1,16 +1,16 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="gnn",
-    version="1.1.0",
+    version="1.1.5",
     author="Matteo Tiezzi",
     author_email="mtiezzi@diism.unisi.it",
     description="Graph Neural Network Tensorflow implementation",
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    #long_description_content_type="text/markdown",
     url="https://github.com/mtiezzi/gnn",
     packages=setuptools.find_packages(),
     classifiers=[

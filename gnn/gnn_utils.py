@@ -125,7 +125,7 @@ def set_load_subgraph(data_path, set_type):
         exit(1)
 
 def set_load_clique(data_path, set_type):
-    import load as ld
+    import gnn.load as ld
     # load adjacency list
     types = ["train", "validation", "test"]
     train = ld.loadmat(os.path.join(data_path, "cliquedataset.mat"))
@@ -204,7 +204,7 @@ def set_load_mutag(set_type, train):
 
 
 def set_load_general(data_path, set_type, set_name="sub_30_15"):
-    import load as ld
+    import gnn.load as ld
     # load adjacency list
     types = ["train", "validation", "test"]
     train = ld.loadmat(os.path.join(data_path, "{}.mat".format(set_name)))

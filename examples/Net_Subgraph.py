@@ -23,23 +23,23 @@ class Net:
         self.state_input = self.input_dim - 1 + state_dim  # removing the id_ dimension
 
         #### TO BE SET ON A SPECIFIC PROBLEM
-        self.state_l1 = 15
+        self.state_l1 = 5
         self.state_l2 = self.state_dim
 
-        self.output_l1 = 10
+        self.output_l1 = 5
         self.output_l2 = self.output_dim
 
     def netSt(self, inp):
         with tf.variable_scope('State_net'):
 
-            layer1 = tf.layers.dense(inp, self.state_l1, activation=tf.nn.tanh)
-            layer2 = tf.layers.dense(layer1, self.state_l2, activation=tf.nn.tanh)
+            layer1 = tf.layers.dense(inp, self.state_l1, activation=tf.nn.sigmoid)
+            layer2 = tf.layers.dense(layer1, self.state_l2, activation=tf.nn.sigmoid)
 
             return layer2
 
     def netOut(self, inp):
 
-            layer1 = tf.layers.dense(inp, self.output_l1, activation=tf.nn.tanh)
+            layer1 = tf.layers.dense(inp, self.output_l1, activation=tf.nn.sigmoid)
             layer2 = tf.layers.dense(layer1, self.output_l2, activation=tf.nn.softmax)
 
             return layer2

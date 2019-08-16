@@ -36,7 +36,7 @@ inp_val, arcnode_val, nodegraph_val, nodein_val, labels_val, _ = gnn_utils.set_l
 
 # set threshold, learning rate and state dimension
 threshold = 0.001
-learning_rate = 0.0001
+learning_rate = 0.01
 state_dim = 5
 
 # set input and output dim, the maximum number of iterations, the number of epochs and the optimizer
@@ -67,7 +67,9 @@ for j in range(0, num_epoch):
     g.Train(inp[0], arcnode[0], labels, count, nodegraph[0])
 
     if count % 30 == 0:
-        print(g.Validate(inp_val[0], arcnode_val[0], labels_val, count, nodegraph_val[0]))
+        print("Epoch ", count)
+        print("Training: ", g.Validate(inp[0], arcnode[0], labels, count, nodegraph[0]))
+        print("Validation: ",g.Validate(inp_val[0], arcnode_val[0], labels_val, count, nodegraph_val[0]))
 
     count = count + 1
 

@@ -4,7 +4,7 @@ Graph Neural Network Model
 This repo contains a Tensorflow implementation of the Graph Neural Network model.
 
 
-- **Website (including documentation):** https://sailab.diism.unisi.it/gnn/index.html
+- **Website (including documentation):** https://mtiezzi.github.io/gnn_site/
 
 Install
 -------
@@ -26,7 +26,7 @@ Install the latest version of GNN::
       pip install gnn
 
 
-For additional details, please see `Install <https://sailab.diism.unisi.it/gnn/install.html>`_.
+For additional details, please see `Install <https://mtiezzi.github.io/gnn_site/install.html>`_.
 
 Simple usage example
 --------------------

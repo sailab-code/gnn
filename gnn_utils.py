@@ -78,11 +78,15 @@ def GetInput(mat, lab, batch=1, grafi=None):
         arcnode_batch.append(arcnode)
 
         # nodegraph
-        nodegraph = np.zeros((max_id + 1, max_gr + 1))
+        # nodegraph = np.zeros((max_id + 1, max_gr + 1))
 
-        for t in range(0, max_id + 1):
-            val = adj[["graph"]].loc[(adj["id_1"] == t) | (adj["id_2"] == t)].values[0]
-            nodegraph[t][val] = 1
+        # for t in range(0, max_id + 1):
+        #     val = adj[["graph"]].loc[(adj["id_1"] == t) | (adj["id_2"] == t)].values[0]
+        #     nodegraph[t][val] = 1
+
+        nodegraph = SparseMatrix(indices=np.stack((dgr["graph"].values, np.arange(max_id+1)), axis=1), values=np.ones(max_id+1),
+                               dense_shape=[max_gr+1, max_id + 1])
+
 
         nodegraph_batch.append(nodegraph)
         # node number in each graph
@@ -125,7 +129,7 @@ def set_load_subgraph(data_path, set_type):
         exit(1)
 
 def set_load_clique(data_path, set_type):
-    import gnn.load as ld
+    import load as ld
     # load adjacency list
     types = ["train", "validation", "test"]
     train = ld.loadmat(os.path.join(data_path, "cliquedataset.mat"))
@@ -204,7 +208,7 @@ def set_load_mutag(set_type, train):
 
 
 def set_load_general(data_path, set_type, set_name="sub_30_15"):
-    import gnn.load as ld
+    import load as ld
     # load adjacency list
     types = ["train", "validation", "test"]
     train = ld.loadmat(os.path.join(data_path, "{}.mat".format(set_name)))

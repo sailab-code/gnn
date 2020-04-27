@@ -66,7 +66,10 @@ class GNN:
         self.ArcNode = tf.sparse_placeholder(tf.float32, name="ArcNode")
 
         # node-graph conversion matrix
-        self.NodeGraph = tf.placeholder(tf.float32, name="NodeGraph")
+        if self.graph_based:
+            self.NodeGraph = tf.sparse_placeholder(tf.float32, name="NodeGraph")
+        else:
+            self.NodeGraph = tf.placeholder(tf.float32, name="NodeGraph")
 
     def build(self):
         '''build the architecture, setting variable, loss, training'''
@@ -155,7 +158,9 @@ class GNN:
                 self.summ_iter = tf.summary.scalar('iteration', num, collections=['always'])
 
             if self.graph_based:
-                stf = tf.transpose(tf.matmul(tf.transpose(st), self.NodeGraph))
+                # stf = tf.transpose(tf.matmul(tf.transpose(st), self.NodeGraph))
+
+                stf = tf.sparse_tensor_dense_matmul(self.NodeGraph, st)
             else:
                 stf = st
             out = self.net.netOut(stf)
@@ -169,6 +174,9 @@ class GNN:
         # Creating a SparseTEnsor with the feeded ArcNode Matrix
         arcnode_ = tf.SparseTensorValue(indices=ArcNode.indices, values=ArcNode.values,
                                         dense_shape=ArcNode.dense_shape)
+        if self.graph_based:
+            nodegraph = tf.SparseTensorValue(indices=nodegraph.indices, values=nodegraph.values,
+                                        dense_shape=nodegraph.dense_shape)
 
         fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
               self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
@@ -194,6 +202,10 @@ class GNN:
 
         arcnode_ = tf.SparseTensorValue(indices=arcnodeVal.indices, values=arcnodeVal.values,
                                         dense_shape=arcnodeVal.dense_shape)
+        if self.graph_based:
+            nodegraph = tf.SparseTensorValue(indices=nodegraph.indices, values=nodegraph.values,
+                                        dense_shape=nodegraph.dense_shape)
+
 
         fd_val = {self.NodeGraph: nodegraph, self.comp_inp: inptVal,
                   self.state: np.zeros((arcnodeVal.dense_shape[0], self.state_dim)),
@@ -231,6 +243,10 @@ class GNN:
 
         arcnode_ = tf.SparseTensorValue(indices=ArcNode.indices, values=ArcNode.values,
                                         dense_shape=ArcNode.dense_shape)
+        if self.graph_based:
+            nodegraph = tf.SparseTensorValue(indices=nodegraph.indices, values=nodegraph.values,
+                                        dense_shape=nodegraph.dense_shape)
+
 
         fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
               self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),

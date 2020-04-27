@@ -5,6 +5,7 @@ This repo contains a Tensorflow implementation of the Graph Neural Network model
 
 
 - **Website (including documentation):** https://mtiezzi.github.io/gnn_site/
+- **Authors:** `Matteo Tiezzi <http://sailab.diism.unisi.it/people/matteo-tiezzi/>`_, `Alberto Rossi <http://sailab.diism.unisi.it/people/alberto-rossi/>`_
 
 Install
 -------
@@ -55,15 +56,48 @@ Simple usage example
             print(g.Validate(inp_val, arcnode_val, labels_val, count, nodegraph_val))
 
 
-..
-    Bugs
-    ----
+Citing
+------
 
-    Please report any bugs that you find `here <https://github.com/networkx/networkx/issues>`_.
-    Or, even better, fork the repository on `GitHub <https://github.com/networkx/networkx>`_
-    and create a pull request (PR). We welcome all changes, big or small, and we
-    will help you make the PR if you are new to `git` (just ask on the issue and/or
-    see `CONTRIBUTING.rst`).
+To cite the GNN implementation please use the following publication::
+
+    Rossi, A., Tiezzi, M., Dimitri, G.M., Bianchini, M., Maggini, M., & Scarselli, F. (2018).
+    "Inductive–Transductive Learning with Graph Neural Networks", 
+    In Artificial Neural Networks in Pattern Recognition (pp.201-212). 
+    Berlin : Springer-Verlag.
+
+Bibtex::
+
+    @inproceedings{rossi2018inductive,
+      title={Inductive--Transductive Learning with Graph Neural Networks},
+      author={Rossi, Alberto and Tiezzi, Matteo and Dimitri, Giovanna Maria and Bianchini, Monica and Maggini, Marco and Scarselli, Franco},
+      booktitle={IAPR Workshop on Artificial Neural Networks in Pattern Recognition},
+      pages={201--212},
+      year={2018},
+      organization={Springer}
+    }
+
+
+To cite GNN please use the following publication::
+
+    F. Scarselli, M. Gori,  A. C. Tsoi, M. Hagenbuchner, G. Monfardini, 
+    "The Graph Neural Network Model", IEEE Transactions on Neural Networks,  
+    vol. 20(1); p. 61-80, 2009.
+
+Bibtex::
+
+    @article{Scarselli2009TheGN,
+      title={The Graph Neural Network Model},
+      author={Franco Scarselli and Marco Gori and Ah Chung Tsoi and Markus Hagenbuchner and Gabriele Monfardini},
+      journal={IEEE Transactions on Neural Networks},
+      year={2009},
+      volume={20},
+      pages={61-80}
+    }
+
+
+
+
 
 License
 -------

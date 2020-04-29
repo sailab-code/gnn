@@ -23,10 +23,10 @@ class Net:
         self.state_input = self.input_dim - 1 + state_dim  # removing the id_ dimension
 
         #### TO BE SET ON A SPECIFIC PROBLEM
-        self.state_l1 = 15
+        self.state_l1 = 5
         self.state_l2 = self.state_dim
 
-        self.output_l1 = 10
+        self.output_l1 = 5
         self.output_l2 = self.output_dim
 
     def netSt(self, inp):
@@ -44,17 +44,25 @@ class Net:
 
             return layer2
 
-    def Loss(self, output, target, output_weight=None):
+    def Loss(self, output, target, output_weight=None, mask=None):
         # method to define the loss function
         #lo = tf.losses.softmax_cross_entropy(target, output)
         output = tf.maximum(output, self.EPSILON, name="Avoiding_explosions")  # to avoid explosions
         xent = -tf.reduce_sum(target * tf.log(output), 1)
+
+        mask = tf.cast(mask, dtype=tf.float32)
+        mask /= tf.reduce_mean(mask)
+        xent *= mask
         lo = tf.reduce_mean(xent)
         return lo
 
-    def Metric(self, target, output, output_weight=None):
+    def Metric(self, target, output, output_weight=None, mask=None):
         # method to define the evaluation metric
-        correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(target, 1))
-        metric = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-        return metric
+        correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(target, 1))
+        accuracy_all = tf.cast(correct_prediction, tf.float32)
+        mask = tf.cast(mask, dtype=tf.float32)
+        mask /= tf.reduce_mean(mask)
+        accuracy_all *= mask
+
+        return tf.reduce_mean(accuracy_all)

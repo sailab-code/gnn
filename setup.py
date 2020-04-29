@@ -5,7 +5,7 @@ with open("README.rst", "r") as fh:
 
 setuptools.setup(
     name="gnn",
-    version="1.1.8",
+    version="1.1.9",
     author="Matteo Tiezzi",
     author_email="mtiezzi@diism.unisi.it",
     description="Graph Neural Network Tensorflow implementation",

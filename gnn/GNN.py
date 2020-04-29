@@ -5,7 +5,7 @@ import datetime as time
 # class for the core of the architecture
 class GNN:
     def __init__(self, net,  input_dim, output_dim, state_dim, max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01, graph_based=False,
-                 param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False):
+                 param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False, mask_flag=False):
         """
                create GNN instance. Feed this parameters:
 
@@ -34,7 +34,7 @@ class GNN:
         self.output_dim = output_dim
         self.state_dim = state_dim
         self.graph_based = graph_based
-
+        self.mask_flag = mask_flag
         self.build()
 
         self.session = tf.Session(config=config)
@@ -58,6 +58,9 @@ class GNN:
         self.comp_inp = tf.placeholder(tf.float32, shape=(None, self.input_dim), name="input")
         self.y = tf.placeholder(tf.float32, shape=(None, self.output_dim), name="target")
 
+        if self.mask_flag:
+            self.mask = tf.placeholder(tf.float32, name="mask")
+
         # state(t) & state(t-1)
         self.state = tf.placeholder(tf.float32, shape=(None, self.state_dim), name="state")
         self.state_old = tf.placeholder(tf.float32, shape=(None, self.state_dim), name="old_state")
@@ -79,10 +82,13 @@ class GNN:
 
         # loss
         with tf.variable_scope('loss'):
-            self.loss = self.net.Loss(self.loss_op[0], self.y)
-
-            # val loss
-            self.val_loss = self.net.Loss(self.loss_op[0], self.y)
+            if self.mask_flag:
+                self.loss = self.net.Loss(self.loss_op[0], self.y, mask=self.mask)
+                self.val_loss = self.net.Loss(self.loss_op[0], self.y, mask=self.mask)
+            else:
+                self.loss = self.net.Loss(self.loss_op[0], self.y)
+                # val loss
+                self.val_loss = self.net.Loss(self.loss_op[0], self.y)
 
             if self.tensorboard:
                 self.summ_loss = tf.summary.scalar('loss', self.loss, collections=['train'])
@@ -99,11 +105,17 @@ class GNN:
 
         # metrics
         with tf.variable_scope('metrics'):
-            self.metrics = self.net.Metric(self.y, self.loss_op[0])
+            if self.mask_flag:
+                self.metrics = self.net.Metric(self.y, self.loss_op[0], mask=self.mask)
+            else:
+                self.metrics = self.net.Metric(self.y, self.loss_op[0])
 
         # val metric
         with tf.variable_scope('val_metric'):
-            self.val_met = self.net.Metric(self.y, self.loss_op[0])
+            if self.mask_flag:
+                self.val_met = self.net.Metric(self.y, self.loss_op[0], mask=self.mask)
+            else:
+                self.val_met = self.net.Metric(self.y, self.loss_op[0])
             if self.tensorboard:
                 self.summ_val_met = tf.summary.scalar('val_metric', self.val_met, collections=['always'])
 
@@ -115,12 +127,12 @@ class GNN:
             old_state = state
 
             # grub states of neighboring node
-            gat = tf.gather(old_state, tf.cast(a[:, 0], tf.int32))
+            gat = tf.gather(old_state, tf.cast(a[:, 1], tf.int32))
 
             # slice to consider only label of the node and that of it's neighbor
             # sl = tf.slice(a, [0, 1], [tf.shape(a)[0], tf.shape(a)[1] - 1])
             # equivalent code
-            sl = a[:, 1:]
+            sl = a[:, 2:]
 
             # concat with retrieved state
             inp = tf.concat([sl, gat], axis=1)
@@ -167,8 +179,8 @@ class GNN:
 
         return out, num
 
-    def Train(self, inputs, ArcNode, target, step, nodegraph=0.0):
-        ''' train methods: has to receive the inputs, arch-node matrix , target,
+    def Train(self, inputs, ArcNode, target, step, nodegraph=0.0, mask=None):
+        ''' train methods: has to receive the inputs, arch-node matrix conversion, target,
         and optionally nodegraph indicator '''
 
         # Creating a SparseTEnsor with the feeded ArcNode Matrix
@@ -178,9 +190,16 @@ class GNN:
             nodegraph = tf.SparseTensorValue(indices=nodegraph.indices, values=nodegraph.values,
                                         dense_shape=nodegraph.dense_shape)
 
-        fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
-              self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
-              self.ArcNode: arcnode_, self.y: target}
+        if self.mask_flag:
+            fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs,
+                  self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
+                  self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
+                  self.ArcNode: arcnode_, self.y: target, self.mask: mask}
+        else:
+
+            fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
+                  self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
+                  self.ArcNode: arcnode_, self.y: target}
         if self.tensorboard:
             _, loss, loop, merge_all, merge_tr = self.session.run(
                 [self.train_op, self.loss, self.loss_op, self.merged_all, self.merged_train],
@@ -195,7 +214,7 @@ class GNN:
 
         return loss, loop[1]
 
-    def Validate(self, inptVal, arcnodeVal, targetVal, step, nodegraph=0.0):
+    def Validate(self, inptVal, arcnodeVal, targetVal, step, nodegraph=0.0, mask=None):
         """ Takes care of the validation of the model - it outputs, regarding the set given as input,
          the loss value, the accuracy (custom defined in the Net file), the number of iteration
          in the convergence procedure """
@@ -206,12 +225,20 @@ class GNN:
             nodegraph = tf.SparseTensorValue(indices=nodegraph.indices, values=nodegraph.values,
                                         dense_shape=nodegraph.dense_shape)
 
+        if self.mask_flag:
+            fd_val = {self.NodeGraph: nodegraph, self.comp_inp: inptVal,
+                      self.state: np.zeros((arcnodeVal.dense_shape[0], self.state_dim)),
+                      self.state_old: np.ones((arcnodeVal.dense_shape[0], self.state_dim)),
+                      self.ArcNode: arcnode_,
+                      self.y: targetVal,
+                      self.mask: mask}
+        else:
 
-        fd_val = {self.NodeGraph: nodegraph, self.comp_inp: inptVal,
-                  self.state: np.zeros((arcnodeVal.dense_shape[0], self.state_dim)),
-                  self.state_old: np.ones((arcnodeVal.dense_shape[0], self.state_dim)),
-                  self.ArcNode: arcnode_,
-                  self.y: targetVal}
+            fd_val = {self.NodeGraph: nodegraph, self.comp_inp: inptVal,
+                      self.state: np.zeros((arcnodeVal.dense_shape[0], self.state_dim)),
+                      self.state_old: np.ones((arcnodeVal.dense_shape[0], self.state_dim)),
+                      self.ArcNode: arcnode_,
+                      self.y: targetVal}
 
         if self.tensorboard:
             loss_val, loop, merge_all, merge_val, metr = self.session.run(

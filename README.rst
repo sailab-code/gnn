@@ -97,6 +97,12 @@ Bibtex::
 
 
 
+Contributions
+-------------
+
+In the example folder you can find a tentative all-in-one implementation in Tensorflow 2,  a contribution by `Rohan Kotwani<https://github.com/rkotwani
+>`_.
+We thank him and all the interested users!
 
 
 License

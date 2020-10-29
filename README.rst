@@ -100,7 +100,7 @@ Bibtex::
 Contributions
 -------------
 
-In the example folder, file  `GNN_SimpleNet_TF2.py <https://github.com/sailab-code/gnn/blob/master/examples/GNN_SimpleNet_TF2.py>`_ you can find a tentative all-in-one implementation in Tensorflow 2, a contribution by `Rohan Kotwani <https://github.com/rkotwani>`_.
+In the example folder, file  `GNN_SimpleNet_TF2.py <https://github.com/sailab-code/gnn/blob/master/examples/GNN_SimpleNet_TF2.py>`_ you can find a tentative all-in-one implementation in Tensorflow 2, a contribution by `Rohan Kotwani <https://github.com/freedomtowin>`_.
 We thank him and all the interested users!
 
 
